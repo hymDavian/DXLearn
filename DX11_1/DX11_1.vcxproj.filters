@@ -15,41 +15,28 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="WindowsProject1.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="systemclass.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="inputclass.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="applicationclass.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="WindowsProject1.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\DX11Learn\applicationclass.h">
+    <ClInclude Include="systemclass.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\DX11Learn\inputclass.h">
+    <ClInclude Include="inputclass.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\DX11Learn\systemclass.h">
+    <ClInclude Include="applicationclass.h">
       <Filter>头文件</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\DX11Learn\applicationclass.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DX11Learn\inputclass.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DX11Learn\main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\DX11Learn\systemclass.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

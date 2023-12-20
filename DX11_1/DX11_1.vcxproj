@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{35fe9abe-0804-4e57-aaa3-efef049b9171}</ProjectGuid>
-    <RootNamespace>WindowsProject1</RootNamespace>
+    <ProjectGuid>{00871fc2-223a-4533-a87a-e202b016e6df}</ProjectGuid>
+    <RootNamespace>DX111</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -127,22 +127,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ResourceCompile Include="WindowsProject1.rc" />
+    <ClCompile Include="applicationclass.cpp" />
+    <ClCompile Include="inputclass.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="systemclass.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="small.ico" />
-    <Image Include="WindowsProject1.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\DX11Learn\applicationclass.h" />
-    <ClInclude Include="..\DX11Learn\inputclass.h" />
-    <ClInclude Include="..\DX11Learn\systemclass.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\DX11Learn\applicationclass.cpp" />
-    <ClCompile Include="..\DX11Learn\inputclass.cpp" />
-    <ClCompile Include="..\DX11Learn\main.cpp" />
-    <ClCompile Include="..\DX11Learn\systemclass.cpp" />
+    <ClInclude Include="applicationclass.h" />
+    <ClInclude Include="inputclass.h" />
+    <ClInclude Include="systemclass.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
