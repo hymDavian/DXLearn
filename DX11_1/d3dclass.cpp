@@ -296,7 +296,73 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;//模具测试通过且深度测试失败时要执行的模具操作【..】将模具值递增 1，如有必要，将结果换行
 	depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;//模具测试和深度测试都通过时要执行的模具操作,【..】
 	depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;//将模具数据与现有模具数据进行比较，【..】始终传递比较
+	// 背面操作
+	depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
+	//完成描述后，创建一个深度模具状态
+	result = m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	//有了创建的深度模具状态，现在可以设置它，使其生效。请注意，使用设备上下文来设置它。
+	m_deviceContext->OMSetDepthStencilState(m_depthStencilState, 1);
+
+	/*接下来我们需要创建的是深度模具缓冲区视图的描述。
+	我们这样做是为了让Direct3D知道使用深度缓冲区作为深度模具纹理。
+	填写完描述后，我们调用函数CreateDepthStencilView来创建它。*/
+
+	//初始化深度模具视口
+	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
+
+	//设置描述信息
+	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;//指定资源数据格式，【..】一种 32 位 z 缓冲区格式，支持 24 位深度和 8 位模具。
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;//指定如何访问深度模具资源,【..】资源将作为 2D 纹理进行访问
+	depthStencilViewDesc.Texture2D.MipSlice = 0;//指定 2D 纹理子资源,要使用的第一个 mipmap 级别的索引
+
+	//开始创建深度模具视口
+	result = m_device->CreateDepthStencilView(m_depthStencilBuffer, &depthStencilViewDesc, &m_depthStencilView);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	/*把渲染目标视图和深度模具缓冲区绑定到输出渲染管道。
+	这样，管道渲染的图形将被绘制到我们之前创建的后缓冲区中。
+	将图形写入后缓冲区后，将其交换到前缓冲区，在用户屏幕上显示图形。*/
+
+	//将渲染目标视图和深度模具缓冲区绑定到输出渲染管道
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+
+	/*现在渲染目标已经设置好，继续使用一些额外的功能，将更好地控制场景。
+	首先，创建一个光栅化器状态,控制多边形的渲染方式。
+	默认情况下，DirectX已经设置了光栅化器状态，其工作方式与下面的完全相同，但除非您自己设置，否则您无法更改它。*/
+
+	//设置光栅描述，该描述将确定多边形的绘制方式和内容
+	rasterDesc.AntialiasedLineEnable = false;//指定是否启用行抗锯齿;仅当进行线条绘制且 MultisampleEnable 为 FALSE 时适用
+	rasterDesc.CullMode = D3D11_CULL_BACK;//指示不绘制面向指定方向的三角形,[..]不要绘制朝后三角形
+	rasterDesc.DepthBias = 0;//添加到给定像素的深度值
+	rasterDesc.DepthBiasClamp = 0.0f;//像素的最大深度偏差
+	rasterDesc.DepthClipEnable = true;//启用基于距离的剪裁。
+	rasterDesc.FillMode = D3D11_FILL_SOLID;//确定呈现时使用的填充模式,【..】填充顶点形成的三角形
+	rasterDesc.FrontCounterClockwise = false;//确定三角形是正面还是背面。 如果此参数为 TRUE，则三角形的顶点在呈现器目标上逆时针时被视为正面,反之亦然
+	rasterDesc.MultisampleEnable = false;//指定在多重采样抗锯齿(MSAA)呈现目标上使用的抗锯齿算法。true:四边形线抗锯齿算法,false:alpha 线抗锯齿算法
+	rasterDesc.ScissorEnable = false;//是否启用剪刀矩形剔除，将剔除活动剪刀矩形之外的所有像素
+	rasterDesc.SlopeScaledDepthBias = 0.0f;//给定像素斜率上的标量
+
+	//根据刚刚填写的描述创建光栅化器状态
+	result = m_device->CreateRasterizerState(&rasterDesc, &m_rasterState);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	//现在设置光栅器
+	m_deviceContext->RSSetState(m_rasterState);
 
 	return true;
 }
