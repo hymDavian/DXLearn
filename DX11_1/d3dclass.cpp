@@ -364,15 +364,59 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 	//现在设置光栅器
 	m_deviceContext->RSSetState(m_rasterState);
 
+	//还需要设置视口，以便Direct3D可以将剪辑空间坐标映射到渲染目标空间。将其设置为窗口的整个大小。
+	
+	//设置渲染视口信息
+	m_viewport.Width = (float)screenWidth;
+	m_viewport.Height = (float)screenHeight;
+	m_viewport.MinDepth = 0.0f;
+	m_viewport.MaxDepth = 1.0f;
+	m_viewport.TopLeftX = 0.0f;
+	m_viewport.TopLeftY = 0.0f;
+
+	//创建视口
+	m_deviceContext->RSSetViewports(1, &m_viewport);
+
+	/*创建投影矩阵。投影矩阵用于将3D场景转换创建的2D视口空间。需要保留此矩阵的副本，以便将其传递给用于渲染场景的着色器*/
+	fieldOfView = 3.141592654f / 4.0f;
+	screenAspect = (float)screenWidth / (float)screenHeight;
+
+	//根據視野範圍建置左手透視投影矩陣
+	//参数1:上下角度 参数2:横纵比 参数3:近裁剪距离,大于0 参数4:远裁剪距离，大于0
+	//投影摄像机~
+	m_projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth);
+
+	/*创建世界矩阵。此矩阵用于将对象的顶点转换为3D场景中的顶点。
+	此矩阵还将用于在三维空间中旋转、平移和缩放对象。从一开始，把矩阵初始化为单位矩阵，并在这个对象中保留它的副本。
+	还需要将副本传递给着色器进行渲染。*/
+	//初始化世界矩阵，单位矩阵
+	m_worldMatrix = XMMatrixIdentity();
+
+	/*最后，设置一个正交投影矩阵。该矩阵用于在屏幕上渲染2D元素，如用户界面，跳过3D渲染。*/
+	//正交摄像机
+	//宽度 高度 近裁剪距离 远裁剪距离
+	m_orthoMatrix = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
+
 	return true;
 }
 
+//清空所有指针引用
 void D3DClass::Shutdown()
 {
+	m_swapChain = 0;
+	m_device = 0;
+	m_deviceContext = 0;
+	m_renderTargetView = 0;
+	m_depthStencilBuffer = 0;
+	m_depthStencilState = 0;
+	m_depthStencilView = 0;
+	m_rasterState = 0;
+	
 }
 
 void D3DClass::BeginScene(float, float, float, float)
 {
+
 }
 
 void D3DClass::EndScene()
