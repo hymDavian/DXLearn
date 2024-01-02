@@ -1,0 +1,15 @@
+//像素着色器
+
+//这里直接复制 color.vs 内的像素输入类型，顶点着色器返回给此像素着色器的类型就是一样的
+//像素输入类型
+struct PixelInputType
+{
+    float4 position : SV_POSITION;
+    float4 color : COLOR;
+};
+
+//像素着色器处理函数，该函数会返回最终显示到屏幕上的像素颜色
+float4 ColorPixelShader(PixelInputType input):SV_TARGET
+{
+    return input.color;
+}
