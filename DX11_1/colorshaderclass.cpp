@@ -83,7 +83,7 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	ID3D10Blob* pixelShaderBuffer;
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];//输入装配器阶段的单个元素的说明
 	unsigned int numElements;
-	D3D11_BUFFER_DESC matrixBufferDesc;//矩阵缓冲区描述
+	D3D11_BUFFER_DESC matrixBufferDesc;//动态矩阵常量缓冲区描述
 
 	errorMessage = 0;
 	vertexShaderBuffer = 0;
@@ -177,23 +177,174 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	polygonLayout[1].InstanceDataStepRate = 0;
 
+	//获取布局要素的数量
+	numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
-	return false;
+	//创建顶点输入布局
+	result = device->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &m_layout);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	//释放顶点和像素着色器缓冲区，因为一旦创建布局，就不再需要它们
+	vertexShaderBuffer->Release();
+	vertexShaderBuffer = 0;
+
+	pixelShaderBuffer->Release();
+	pixelShaderBuffer = 0;
+
+	/*使用着色器需要设置的最后一件事是常量缓冲区。
+	目前只有一个常量缓冲区，因此只需要在此处设置一个缓冲区，以便可以与着色器交互。 
+	缓冲区使用需要设置为动态，因为将在每一帧更新它。
+	绑定标志指示此缓冲区将是一个常量缓冲区。 
+	CPU 访问标志需要与使用情况匹配，因此将其设置为 D3D11_CPU_ACCESS_WRITE。 
+	填写描述后，可以创建常量缓冲区接口，然后使用函数 SetShaderParameters 访问着色器中的内部变量。*/
+
+	//设置顶点着色器中动态矩阵常量缓冲区的描述。
+	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;//预期如何读取和写入缓冲区,【】 对于每帧由 CPU 至少更新一次的资源，动态资源是一个不错的选择
+	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferType);
+	matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;//将缓冲区作为常量缓冲区绑定到着色器阶段
+	matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;//CPU访问类型，【】资源是可映射的，以便 CPU 可以更改其内容
+	matrixBufferDesc.MiscFlags = 0;//杂项，0不使用
+	matrixBufferDesc.StructureByteStride = 0;//缓冲区表示结构化缓冲区时，缓冲区结构中每个元素的大小
+
+	//创建常量缓冲区指针，以便可以从此类中访问顶点着色器常量缓冲区。
+	result = device->CreateBuffer(&matrixBufferDesc, NULL, &m_matrixBuffer);
+	if (FAILED(result))
+	{
+		return false;
+	}
+
+	return true;
 }
 
+//释放着色器资源的几个接口对象
 void ColorShaderClass::ShutdownShader()
 {
+	//释放常量矩阵缓冲区
+	if (m_matrixBuffer)
+	{
+		m_matrixBuffer->Release();
+		m_matrixBuffer = 0;
+	}
+	//释放布局描述
+	if (m_layout)
+	{
+		m_layout->Release();
+		m_layout = 0;
+	}
+	//释放顶点着色器
+	if (m_vertexShader)
+	{
+		m_vertexShader->Release();
+		m_vertexShader = 0;
+	}
+	//释放像素着色器
+	if (m_pixelShader)
+	{
+		m_pixelShader->Release();
+		m_pixelShader = 0;
+	}
+
+	return;
 }
 
-void ColorShaderClass::OutputShaderErrorMessage(ID3D10Blob*, HWND, WCHAR*)
+//这里处理 在编译顶点着色器或像素着色器时生成的错误消息
+
+void ColorShaderClass::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
 {
+	char* compileErrors;
+	unsigned long long bufferSize, i;
+	ofstream fout;
+
+	//获取一个错误消息文本缓冲区的指针
+	compileErrors = (char*)(errorMessage->GetBufferPointer());
+
+	//获取消息长度
+	bufferSize = errorMessage->GetBufferSize();
+
+	//打开文件用以写入错误消息到里面
+	fout.open("shader-error.txt");
+	//写入
+	for (i = 0; i < bufferSize; i++)
+	{
+		fout << compileErrors[i];
+	}
+	//关闭文件
+	fout.close();
+
+	//释放错误消息
+	errorMessage->Release();
+	errorMessage = 0;
+
+	//在屏幕上弹出一条消息，通知用户检查文本文件中的编译错误
+	MessageBox(hwnd, L"Error compiling shader.Check shader-error.txt for message.", shaderFilename, MB_OK);
+
+	return;
 }
 
-bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext*, XMMATRIX, XMMATRIX, XMMATRIX)
+/*SetShaderVariables 函数的存在是为了更轻松地在着色器中设置全局变量。 
+此函数中使用的矩阵是在 ApplicationClass 中创建的。 
+之后，调用此函数以在 Render 函数调用期间将它们从那里发送到顶点着色器。*/
+
+bool ColorShaderClass::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,XMMATRIX projectionMatrix)
 {
-	return false;
+	HRESULT result;
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	MatrixBufferType* dataPtr;
+	unsigned int bufferNumber;
+
+	//需要确保在将矩阵发送到着色器之前对其进行转置，这是DX11的要求
+	worldMatrix = XMMatrixTranspose(worldMatrix);
+	viewMatrix = XMMatrixTranspose(viewMatrix);
+	projectionMatrix = XMMatrixTranspose(projectionMatrix);
+
+	//锁定m_matrixBuffer，在其中设置新矩阵，然后解锁它。
+	//Map方法：获取指向 子资源中包含的数据的指针，并拒绝 GPU 访问该子资源
+	result = deviceContext->Map(m_matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (FAILED(result))
+	{
+		return false;
+	}
+	//获取指向常量缓冲区中数据的指针
+	dataPtr = (MatrixBufferType*)mappedResource.pData;
+
+	//拷贝矩阵到常量缓冲区
+	dataPtr->world = worldMatrix;
+	dataPtr->view = viewMatrix;
+	dataPtr->projection = projectionMatrix;
+	//解锁
+	deviceContext->Unmap(m_matrixBuffer, 0);
+
+	//现在，在 HLSL 顶点着色器中设置更新的矩阵缓冲区。
+	//设置常量缓冲区在顶点着色器中的位置
+	bufferNumber = 0;
+	//最后，使用更新的值在顶点着色器中设置常量缓冲区
+	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &m_matrixBuffer);
+
+
+	return true;
 }
 
-void ColorShaderClass::RenderShader(ID3D11DeviceContext*, int)
+/*此函数的第一步是在输入汇编器中将输入布局设置为活动状态。 
+这让 GPU 知道顶点缓冲区中数据的格式。 
+第二步是设置顶点着色器和像素着色器，将用于渲染此顶点缓冲区。 
+设置着色器后，通过使用 D3D 设备上下文调用 DrawIndexed DirectX 11 函数来呈现三角形。 
+
+调用此函数后，它将呈现绿色三角形。*/
+
+void ColorShaderClass::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
+	//设置顶点输入布局
+	deviceContext->IASetInputLayout(m_layout);
+
+	//设置将用于渲染此三角形的顶点和像素着色器
+	deviceContext->VSSetShader(m_vertexShader, NULL, 0);
+	deviceContext->PSSetShader(m_pixelShader, NULL, 0);
+
+	//渲染三角形
+	deviceContext->DrawIndexed(indexCount, 0, 0);
+
+	return;
 }
