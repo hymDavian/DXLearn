@@ -403,7 +403,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, bool vsync, HWND hw
 //释放并清空所有指针引用
 void D3DClass::Shutdown()
 {
-	// 在关闭之前，设置为窗口模式或释放交换链时，它将引发异常
+	/*强制交换链在释放任何指针之前先进入窗口模式。如果不这样做，并且试图在全屏模式下释放交换链，则会引发一些异常*/
 	if (m_swapChain)
 	{
 		m_swapChain->SetFullscreenState(false, NULL);
@@ -460,45 +460,96 @@ void D3DClass::Shutdown()
 	return;
 }
 
-void D3DClass::BeginScene(float, float, float, float)
-{
+/*在D3D类中，持有几个助手函数。前两个是BeginScene和EndScene。
+每当要在每帧的开头绘制新的3D场景时，都会调用BeginScene。
+它所做的只是初始化缓冲区，使其为空白并准备好绘制。
+另一个功能是Endscene，它“告诉”交换链在每帧结束时完成所有绘制后显示3D场景。*/
 
+void D3DClass::BeginScene(float red, float green, float blue, float alpha)
+{
+	float color[4];
+	color[0] = red;
+	color[1] = green;
+	color[2] = blue;
+	color[3] = alpha;
+
+	//清除后缓冲区
+	m_deviceContext->ClearRenderTargetView(m_renderTargetView, color);
+
+	//清除深度缓冲区  
+	m_deviceContext->ClearDepthStencilView(m_depthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
+
+	return;
 }
 
 void D3DClass::EndScene()
 {
+	//渲染完成后，将后台缓冲区呈现给屏幕。
+	//Present 向用户呈现图像
+	//参数1 指定如何将框架的呈现与垂直空白同步 0立即发生，没有同步 1-4同步n个垂直空白之后的内容
+	//参数2 	0表示从每个缓冲区 (显示一个帧，从当前缓冲区) 到输出。
+	if(m_vsync_enabled)
+	{
+		m_swapChain->Present(1, 0);
+	}
+	else
+	{
+		m_swapChain->Present(0, 0);
+	}
 }
 
 ID3D11Device* D3DClass::GetDevice()
 {
-	return nullptr;
+	return m_device;
 }
 
 ID3D11DeviceContext* D3DClass::GetDeviceContext()
 {
-	return nullptr;
+	return m_deviceContext;
 }
 
-void D3DClass::GetProjectionMatrix(XMMATRIX&)
+/*接下来的三个辅助函数为调用函数提供投影矩阵、世界矩阵和正交矩阵的副本。
+大多数着色器都需要这些矩阵进行渲染，因此外部对象需要一种简单的方法来获得它们的副本。*/
+
+void D3DClass::GetProjectionMatrix(XMMATRIX& projectionMatrix)
 {
+	projectionMatrix = m_projectionMatrix;
+	return;
 }
 
-void D3DClass::GetWorldMatrix(XMMATRIX&)
+void D3DClass::GetWorldMatrix(XMMATRIX& worldMatrix)
 {
+	worldMatrix = m_worldMatrix;
+	return;
 }
 
-void D3DClass::GetOrthoMatrix(XMMATRIX&)
+void D3DClass::GetOrthoMatrix(XMMATRIX& orthoMatrix)
 {
+	orthoMatrix = m_orthoMatrix;
+	return;
 }
 
-void D3DClass::GetVideoCardInfo(char*, int&)
+/*此助手函数通过引用返回显卡的名称和视频内存量。了解视频卡名称可以帮助调试不同的配置。*/
+
+void D3DClass::GetVideoCardInfo(char* cardName, int& memory)
 {
+	strcpy_s(cardName, 128, m_videoCardDescription);
+	memory = m_videoCardMemory;
+	return;
 }
+
+//渲染到纹理使用的函数
 
 void D3DClass::SetBackBufferRenderTarget()
 {
+	//将渲染目标视图和深度模具缓冲区绑定到输出渲染管道
+	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
+	return;
 }
 
 void D3DClass::ResetViewport()
 {
+	//设置视口
+	m_deviceContext->RSSetViewports(1, &m_viewport);
+	return;
 }

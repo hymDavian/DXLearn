@@ -61,7 +61,7 @@ bool ApplicationClass::Frame()
 bool ApplicationClass::Render()
 {
 	//清除缓冲区以开始场景。
-	m_Direct3D->BeginScene(0.5f, 0.5f, 0.5f, 1);
+	m_Direct3D->BeginScene(0.2f, 0.2f, 0.2f, 1);
 
 	//将渲染的场景呈现到屏幕上。
 	m_Direct3D->EndScene();
