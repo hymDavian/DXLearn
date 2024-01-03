@@ -105,7 +105,7 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	// 接收指向可用于访问已编译代码的指针
 	// 接收指向可用于访问编译器错误消息的指针
 	result = D3DCompileFromFile(vsFilename, NULL, NULL, "ColorVertexShader", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, 
-		&vertexShaderBuffer, &errorMessage);
+						&vertexShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
 		//如果着色器未能编译，它应该已经向错误消息写入了一些内容。
@@ -121,7 +121,8 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 	}
 
 	//编译像素着色器
-	result = D3DCompileFromFile(psFilename, NULL, NULL, "ColorPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
+	result = D3DCompileFromFile(psFilename, NULL, NULL, "ColorPixelShader", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0,
+		&pixelShaderBuffer, &errorMessage);
 	if (FAILED(result))
 	{
 		if (errorMessage)
@@ -162,7 +163,7 @@ bool ColorShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* 
 
 	//创建顶点输入布局描述
 	//此设置需要匹配ModelClass和着色器中的VertexType结构
-	polygonLayout[0].SemanticName = "POSITIONT";//着色器输入签名中与此元素关联的 HLSL 语义
+	polygonLayout[0].SemanticName = "POSITION";//着色器输入签名中与此元素关联的 HLSL 语义
 	polygonLayout[0].SemanticIndex = 0;//元素的语义索引。 语义索引使用整数索引号修改语义。 仅当有多个具有相同语义的元素时，才需要语义索引。 例如，4x4 矩阵有四个组件，每个组件都有语义名称
 	polygonLayout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;//元素数据的数据类型,【】一种三分量 96 位浮点格式
 	polygonLayout[0].InputSlot = 0;//标识输入装配器 (输入槽) 的整数值。 有效值介于 0 和 15 之间

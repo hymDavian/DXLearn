@@ -64,10 +64,10 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 
 	//设置顶点数组的数量 
 	//以三角形为例
-	m_vertexCount = 3;
+	m_vertexCount = 4;
 
 	//设置索引数组的数量
-	m_indexCount = 3;
+	m_indexCount = 6;
 
 	//创建顶点数组
 	vertices = new VertexType[m_vertexCount];
@@ -82,17 +82,26 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	将顶点发送到 GPU 的顺序非常重要。 颜色也在此处设置，因为它是顶点描述的一部分。*/
 
 	//载入数据到顶点数组
-	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);//左边点
-	vertices[0].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);//绿色
-	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);//中点
-	vertices[1].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
-	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);//右点
-	vertices[2].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);
+	vertices[0].color = XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f);
+
+	vertices[1].position = XMFLOAT3(-1.0f, 1.0f, 0.0f);
+	vertices[1].color = XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f);
+
+	vertices[2].position = XMFLOAT3(1.0f, 1.0f, 0.0f);
+	vertices[2].color = XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f);
+
+	vertices[3].position = XMFLOAT3(1.0f, -1.0f, 0.0f);
+	vertices[3].color = XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f);
 
 	//索引数据 需要顺时针
 	indices[0] = 0;
 	indices[1] = 1;
 	indices[2] = 2;
+
+	indices[3] = 2;
+	indices[4] = 3;
+	indices[5] = 0;
 
 	/*创建顶点缓冲区和索引缓冲区。 创建两个缓冲区的方式相同。
 	首先填写缓冲区的描述。 在描述中，ByteWidth（缓冲区的大小）和 BindFlags（缓冲区类型）是需要确保正确填写的内容。 

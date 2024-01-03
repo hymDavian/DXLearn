@@ -32,7 +32,7 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 	//初始化相机，模型，着色器类
 	m_Camera = new CameraClass;
-	m_Camera->SetPosition(0.0f, 0.0f, -5.0f);//初始化到后5个单位的位置
+	m_Camera->SetPosition(0.0f, 0.0f, -15.0f);//初始化到后5个单位的位置
 
 	m_Model = new ModelClass;
 	result = m_Model->Initialize(m_Direct3D->GetDevice());

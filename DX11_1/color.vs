@@ -42,6 +42,7 @@ PixelInputType ColorVertexShader(VertexInputType input)
     output.position = mul(output.position, projectionMatrix);
     
     output.color = input.color;
+    //output.color.a *= 0.5f;
     
     return output;
 }
