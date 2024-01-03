@@ -3,6 +3,9 @@
 
 //#include <windows.h>
 #include "d3dclass.h"
+#include "cameraclass.h"
+#include "ModelClass.h"
+#include "colorshaderclass.h"
 
 //ÊÇ·ñÈ«ÆÁ
 const bool FULL_SCREEN = false;
@@ -26,6 +29,9 @@ private:
 
 private:
 	D3DClass* m_Direct3D;
+	CameraClass* m_Camera;
+	ModelClass* m_Model;
+	ColorShaderClass* m_ColorShader;
 };
 
 #endif
