@@ -1,0 +1,30 @@
+/*纹理像素着色器有两个全局变量。
+第一个是 Texture2D shaderTexture，它是纹理资源。 这将是纹理资源，用于在模型上渲染纹理。 
+第二个新变量是 SamplerState SampleType。 采样器状态允许修改像素在着色时写入多边形面的方式。 
+例如，如果多边形非常遥远，并且在屏幕上仅构成 8 个像素，那么我们使用示例状态来 弄清楚哪些像素或哪些像素组合实际上是从原始纹理中绘制的。 
+原始纹理可能是 256 x 256 像素，因此确定绘制哪些像素对于确保 纹理在非常小的多边形面上看起来仍然不错。
+还将在 TextureShaderClass 中设置采样器状态 然后将其附加到资源指针，以便此像素着色器可以使用它来确定要绘制的像素样本。*/
+
+Texture2D shaderTexture : register(t0);
+SamplerState SampleType : register(s0);
+
+struct PixelInputType
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+};
+
+/*像素着色器已修改，因此它现在使用 HLSL 示例函数。 
+示例函数使用上面定义的采样器状态和此像素的纹理坐标。 
+它使用这两个变量来确定并返回多边形面上此 UV 位置的像素值。*/
+
+float4 TexturePixelShader(PixelInputType input) : SV_TARGET
+{
+    float4 textureColor;
+
+
+    // 使用采样器在此纹理坐标位置对纹理中的像素颜色进行采样
+    textureColor = shaderTexture.Sample(SampleType, input.tex);
+
+    return textureColor;
+}
