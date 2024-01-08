@@ -42,6 +42,9 @@
     <ClCompile Include="cameraclass.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="textureshaderclass.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="systemclass.h">
@@ -63,6 +66,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="cameraclass.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="textureshaderclass.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
