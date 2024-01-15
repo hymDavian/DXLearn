@@ -40,7 +40,7 @@ bool TextureShaderClass::Initialize(ID3D11Device* device, HWND hwnd)
 		return false;
 	}
 
-	return false;
+	return true;
 }
 
 void TextureShaderClass::Shutdown()
@@ -59,7 +59,7 @@ bool TextureShaderClass::Render(ID3D11DeviceContext* deviceContext, int indexCou
 		return false;
 	}
 	RenderShader(deviceContext, indexCount);
-	return false;
+	return true;
 }
 
 bool TextureShaderClass::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
