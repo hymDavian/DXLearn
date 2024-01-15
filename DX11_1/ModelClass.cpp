@@ -4,6 +4,7 @@ ModelClass::ModelClass()
 {
 	m_vertexBuffer = 0;
 	m_indexBuffer = 0;
+	m_Texture = 0;
 }
 
 ModelClass::ModelClass(const ModelClass&)
@@ -14,7 +15,7 @@ ModelClass::~ModelClass()
 {
 }
 
-bool ModelClass::Initialize(ID3D11Device* device)
+bool ModelClass::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename)
 {
 	bool result;
 	//初始化顶点和索引缓冲区
@@ -24,11 +25,20 @@ bool ModelClass::Initialize(ID3D11Device* device)
 		return false;
 	}
 
+	result = LoadTexture(device, deviceContext, textureFilename);
+	if (!result)
+	{
+		return false;
+	}
+
+
 	return true;
 }
 
 void ModelClass::Shutdown()
 {
+	ReleaseTexture();
+
 	//调用缓冲区关闭
 	ShutdownBuffers();
 	return;
@@ -49,6 +59,11 @@ int ModelClass::GetIndexCount()
 	return m_indexCount;
 }
 
+ID3D11ShaderResourceView* ModelClass::GetTexture()
+{
+	return m_Texture->GetTexture();
+}
+
 /*处理创建顶点和索引缓冲区,通常，会读入模型并从该数据文件创建缓冲区*/
 
 bool ModelClass::InitializeBuffers(ID3D11Device* device)
@@ -64,10 +79,10 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 
 	//设置顶点数组的数量 
 	//以三角形为例
-	m_vertexCount = 4;
+	m_vertexCount = 3;
 
 	//设置索引数组的数量
-	m_indexCount = 6;
+	m_indexCount = 3;
 
 	//创建顶点数组
 	vertices = new VertexType[m_vertexCount];
@@ -81,27 +96,29 @@ bool ModelClass::InitializeBuffers(ID3D11Device* device)
 	请注意，按照绘制点的顺时针顺序创建点。 如果逆时针这样做，它会认为三角形朝向相反的方向，并且由于背面剔除而没有绘制它。
 	将顶点发送到 GPU 的顺序非常重要。 颜色也在此处设置，因为它是顶点描述的一部分。*/
 
+	/*顶点数组现在具有纹理坐标分量，而不是颜色分量。 
+	纹理向量始终是 U 在前，V 在后。 
+	例如，第一个纹理坐标位于三角形的左下角，对应于 U 0.0， V 1.0。 
+	使用此页面顶部的图表来确定您的坐标需要是什么。 
+	请注意，您可以更改坐标以将纹理的任何部分映射到多边形面的任何部分。 在本教程中，出于简单原因，我只是进行直接映射。*/
+
+
 	//载入数据到顶点数组
 	vertices[0].position = XMFLOAT3(-1.0f, -1.0f, 0.0f);
-	vertices[0].color = XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f);
+	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
 
-	vertices[1].position = XMFLOAT3(-1.0f, 1.0f, 0.0f);
-	vertices[1].color = XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f);
+	vertices[1].position = XMFLOAT3(0.0f, 1.0f, 0.0f);
+	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
 
-	vertices[2].position = XMFLOAT3(1.0f, 1.0f, 0.0f);
-	vertices[2].color = XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f);
+	vertices[2].position = XMFLOAT3(1.0f, -1.0f, 0.0f);
+	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
 
-	vertices[3].position = XMFLOAT3(1.0f, -1.0f, 0.0f);
-	vertices[3].color = XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f);
 
 	//索引数据 需要顺时针
 	indices[0] = 0;
 	indices[1] = 1;
 	indices[2] = 2;
 
-	indices[3] = 2;
-	indices[4] = 3;
-	indices[5] = 0;
 
 	/*创建顶点缓冲区和索引缓冲区。 创建两个缓冲区的方式相同。
 	首先填写缓冲区的描述。 在描述中，ByteWidth（缓冲区的大小）和 BindFlags（缓冲区类型）是需要确保正确填写的内容。 
@@ -195,6 +212,35 @@ void ModelClass::RenderBuffers(ID3D11DeviceContext* deviceContext)
 
 	//绑定有关基元类型以及描述输入汇编程序阶段输入数据的数据顺序的信息
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);//将顶点数据解释为三角形列表
+
+	return;
+}
+
+//LoadTexture 是一个新的私有函数，它将创建纹理对象，然后使用提供的输入文件名对其进行初始化。 此函数在初始化期间调用。
+bool ModelClass::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename)
+{
+	bool result;
+
+	m_Texture = new TextureClass;
+
+	result = m_Texture->Initialize(device, deviceContext, filename);
+	if (!result)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+//ReleaseTexture 函数将释放在 LoadTexture 函数期间创建和加载的纹理对象。
+void ModelClass::ReleaseTexture()
+{
+	if (m_Texture)
+	{
+		m_Texture->Shutdown();
+		delete m_Texture;
+		m_Texture = 0;
+	}
 
 	return;
 }

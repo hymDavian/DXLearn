@@ -45,6 +45,9 @@
     <ClCompile Include="textureshaderclass.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="textureclass.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="systemclass.h">
@@ -69,6 +72,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="textureshaderclass.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="textureclass.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

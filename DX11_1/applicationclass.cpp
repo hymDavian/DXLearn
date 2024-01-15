@@ -6,7 +6,8 @@ ApplicationClass::ApplicationClass()
 	m_Direct3D = 0;
 	m_Camera = 0;
 	m_Model = 0;
-	m_ColorShader = 0;
+	//m_ColorShader = 0;
+	m_TextureShader = 0;
 }
 
 
@@ -22,6 +23,7 @@ ApplicationClass::~ApplicationClass()
 
 bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
+	char textureFilename[128];
 	bool result;
 	m_Direct3D = new D3DClass;
 	result = m_Direct3D->Initialize(screenWidth, screenHeight, VSYNC_ENABLED, hwnd, FULL_SCREEN, SCREEN_DEPTH, SCREEN_NEAR);
@@ -35,18 +37,30 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	m_Camera->SetPosition(0.0f, 0.0f, -15.0f);//初始化到后5个单位的位置
 
 	m_Model = new ModelClass;
-	result = m_Model->Initialize(m_Direct3D->GetDevice());
+	//ModelClass：：Initialize 函数现在采用将用于呈现模型的纹理的名称以及设备上下文。
+	//result = m_Model->Initialize(m_Direct3D->GetDevice());
+	strcpy_s(textureFilename, "../DX11_1/data/stone01.tga");
+	result = m_Model->Initialize(m_Direct3D->GetDevice(), m_Direct3D->GetDeviceContext(), textureFilename);
 	if (!result)
 	{
 		MessageBox(hwnd, L"Could not initilize the model object", L"Error", MB_OK);
 		return false;
 	}
 
-	m_ColorShader = new ColorShaderClass;
-	result = m_ColorShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	//
+	//m_ColorShader = new ColorShaderClass;
+	m_TextureShader = new TextureShaderClass;
+
+	//result = m_ColorShader->Initialize(m_Direct3D->GetDevice(), hwnd);
+	//if (!result)
+	//{
+	//	MessageBox(hwnd, L"Could not initialize the color shader object.", L"Error", MB_OK);
+	//	return false;
+	//}
+	result = m_TextureShader->Initialize(m_Direct3D->GetDevice(), hwnd);
 	if (!result)
 	{
-		MessageBox(hwnd, L"Could not initialize the color shader object.", L"Error", MB_OK);
+		MessageBox(hwnd, L"Could not initialize the texture shader object.", L"Error", MB_OK);
 		return false;
 	}
 
@@ -58,11 +72,17 @@ bool ApplicationClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 void ApplicationClass::Shutdown()
 {
 	// 释放着色器
-	if (m_ColorShader)
+	//if (m_ColorShader)
+	//{
+	//	m_ColorShader->Shutdown();
+	//	delete m_ColorShader;
+	//	m_ColorShader = 0;
+	//}
+	if (m_TextureShader)
 	{
-		m_ColorShader->Shutdown();
-		delete m_ColorShader;
-		m_ColorShader = 0;
+		m_TextureShader->Shutdown();
+		delete m_TextureShader;
+		m_TextureShader = 0;
 	}
 
 	// 释放模型类
@@ -128,8 +148,16 @@ bool ApplicationClass::Render()
 	//将模型顶点和索引缓冲区放在图形管道上，为绘制做好准备。
 	m_Model->Render(m_Direct3D->GetDeviceContext());
 
+
+
 	//使用着色器渲染模型
-	result = m_ColorShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+	//result = m_ColorShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+	//if (!result)
+	//{
+	//	return false;
+	//}
+	//现在调用纹理着色器而不是颜色着色器来渲染模型。 请注意，它还从模型中获取纹理资源指针，以便纹理着色器可以访问模型对象中的纹理。
+	result = m_TextureShader->Render(m_Direct3D->GetDeviceContext(), m_Model->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, m_Model->GetTexture());
 	if (!result)
 	{
 		return false;
