@@ -48,6 +48,12 @@
     <ClCompile Include="textureclass.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="lightshaderclass.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="lightclass.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="systemclass.h">
@@ -77,6 +83,12 @@
     <ClInclude Include="textureclass.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="lightshaderclass.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="lightclass.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="color.vs">
@@ -91,5 +103,16 @@
     <None Include="texture.ps">
       <Filter>hlsl</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="light.vs">
+      <Filter>hlsl</Filter>
+    </Text>
+    <Text Include="light.ps">
+      <Filter>hlsl</Filter>
+    </Text>
+    <Text Include="Cube.txt">
+      <Filter>资源文件</Filter>
+    </Text>
   </ItemGroup>
 </Project>

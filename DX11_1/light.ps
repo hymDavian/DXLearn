@@ -1,0 +1,60 @@
+////////////////////////////////////////////////////////////////////////////////
+// Filename: light.ps
+////////////////////////////////////////////////////////////////////////////////
+
+
+/////////////
+// GLOBALS //
+/////////////
+Texture2D shaderTexture : register(t0);
+SamplerState SampleType : register(s0);
+//在 LightBuffer 中有两个新的全局变量，用于保存漫反射颜色和光线方向。 这两个变量将根据新 LightClass 对象中的值进行设置。
+
+cbuffer LightBuffer
+{
+	float4 diffuseColor;
+	float3 lightDirection;
+	float padding;
+};
+
+
+//////////////
+// TYPEDEFS //
+//////////////
+struct PixelInputType
+{
+	float4 position : SV_POSITION;
+	float2 tex : TEXCOORD0;
+	float3 normal : NORMAL;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Pixel Shader
+////////////////////////////////////////////////////////////////////////////////
+float4 LightPixelShader(PixelInputType input) : SV_TARGET
+{
+	float4 textureColor;
+	float3 lightDir;
+	float lightIntensity;
+	float4 color;
+
+
+    //使用采样器在此纹理坐标位置对纹理中的像素颜色进行采样。
+	textureColor = shaderTexture.Sample(SampleType, input.tex);
+	//这就是前面讨论的照明方程现在实现的地方。 光强值计算为三角形法向量与光向量之间的点积。
+
+    //反转灯光方向以进行计算。
+	lightDir = -lightDirection;
+
+    //计算此像素上的光量。
+	lightIntensity = saturate(dot(input.normal, lightDir));
+	//最后， 将光线的漫射值与纹理像素值相结合，产生颜色结果。
+
+    //基于漫反射颜色与光强度的组合来确定漫反射颜色的最终数量。
+    color = saturate(diffuseColor * lightIntensity);
+
+    //将纹理像素和最终漫反射颜色相乘，得到最终的像素颜色结果。
+	color = color * textureColor;
+
+	return color;
+}
